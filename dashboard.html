@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Response Dashboard - Live Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #ffecd2 100%);
+            min-height: 100vh;
+            color: #8b2957;
+            padding: 20px;
+        }
+
+        /* Header */
+        .dashboard-header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            border-radius: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(36px, 6vw, 56px);
+            color: #ff2d6d;
+            margin-bottom: 10px;
+        }
+
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: blink 1s ease infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        .status-dot.disconnected {
+            background: #dc3545;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 25px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .stat-number {
+            font-size: clamp(48px, 8vw, 72px);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .yes-card .stat-number {
+            color: #ff2d6d;
+        }
+
+        .no-card .stat-number {
+            color: #888;
+        }
+
+        .stat-label {
+            font-size: 18px;
+            color: #8b2957;
+            opacity: 0.8;
+        }
+
+        /* Total Card */
+        .total-card {
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff2d6d 100%);
+            color: white;
+        }
+
+        .total-card .stat-number {
+            color: white;
+        }
+
+        .total-card .stat-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px 35px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.5s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.yes {
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff2d6d 100%);
+        }
+
+        .notification.no {
+            background: linear-gradient(135deg, #888 0%, #666 100%);
+        }
+
+        /* Records Section */
+        .records-section {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .records-section h2 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 32px;
+            color: #ff2d6d;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .records-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .record-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 2px solid #fecfef;
+            animation: slideIn 0.4s ease;
+            transition: background 0.3s ease;
+        }
+
+        .record-item:hover {
+            background: #fff5f8;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .record-response {
+            font-size: 28px;
+            margin-right: 20px;
+        }
+
+        .record-details {
+            flex: 1;
+        }
+
+        .record-name {
+            font-weight: 600;
+            color: #8b2957;
+            font-size: 16px;
+        }
+
+        .record-time {
+            color: #999;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            display: block;
+            margin: 40px auto 20px;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff2d6d 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 45, 109, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(255, 45, 109, 0.4);
+        }
+
+        /* Live Indicator */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 1.5s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .record-item {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <h1>💖 Response Dashboard 💖</h1>
+        <div class="connection-status">
+            <span class="status-dot disconnected" id="statusDot"></span>
+            <span id="statusText">Connecting...</span>
+        </div>
+        <div class="live-indicator" id="liveIndicator" style="display: none;">
+            <span class="live-dot"></span>
+            Live Updates
+        </div>
+    </header>
+
+    <div class="stats-container">
+        <div class="stat-card yes-card">
+            <div class="stat-icon">💕</div>
+            <div class="stat-number" id="yesCount">0</div>
+            <div class="stat-label">Yes Responses</div>
+        </div>
+        
+        <div class="stat-card total-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number" id="totalCount">0</div>
+            <div class="stat-label">Total Responses</div>
+        </div>
+        
+        <div class="stat-card no-card">
+            <div class="stat-icon">🙈</div>
+            <div class="stat-number" id="noCount">0</div>
+            <div class="stat-label">No Responses</div>
+        </div>
+    </div>
+
+    <div class="records-section">
+        <h2>💝 Response History</h2>
+        <div class="records-list" id="recordsList">
+            <div class="empty-state">
+                <div class="icon">💭</div>
+                <p>No responses yet. Wait for someone to answer!</p>
+            </div>
+        </div>
+        <button class="reset-btn" onclick="resetData()">🗑️ Reset All Data</button>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let ws;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                document.getElementById('statusDot').className = 'status-dot connected';
+                document.getElementById('statusText').textContent = 'Connected';
+                document.getElementById('liveIndicator').style.display = 'inline-flex';
+                reconnectAttempts = 0;
+            };
+
+            ws.onclose = () => {
+                document.getElementById('statusDot').className = 'status-dot disconnected';
+                document.getElementById('statusText').textContent = 'Disconnected';
+                document.getElementById('liveIndicator').style.display = 'none';
+
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    setTimeout(connectWebSocket, 2000);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+
+                if (message.type === 'update') {
+                    updateDisplay(message.data);
+                    
+                    // Show notification for new response
+                    if (message.data.records && message.data.records.length > 0) {
+                        const latestRecord = message.data.records[message.data.records.length - 1];
+                        showNotification(latestRecord);
+                    }
+                }
+            };
+        }
+
+        function updateDisplay(data) {
+            document.getElementById('yesCount').textContent = data.yes;
+            document.getElementById('noCount').textContent = data.no;
+            document.getElementById('totalCount').textContent = data.yes + data.no;
+
+            const recordsList = document.getElementById('recordsList');
+            
+            if (data.records && data.records.length > 0) {
+                recordsList.innerHTML = data.records.reverse().map(record => `
+                    <div class="record-item">
+                        <span class="record-response">
+                            ${record.response === 'yes' ? '💕' : '🙈'}
+                        </span>
+                        <div class="record-details">
+                            <div class="record-name">
+                                ${record.response === 'yes' ? 'Said YES!' : 'Said NO'}
+                            </div>
+                            <div class="record-time">${new Date(record.timestamp).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function showNotification(record) {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = record.response === 'yes' 
+                ? '<span>💕</span> Someone said <strong>YES!</strong>'
+                : '<span>🙈</span> Someone said <strong>NO</strong>';
+            notification.className = `notification ${record.response} show`;
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3500);
+        }
+
+        async function resetData() {
+            if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+                try {
+                    await fetch('/api/reset', { method: 'POST' });
+                } catch (err) {
+                    console.error('Failed to reset data:', err);
+                }
+            }
+        }
+
+        // Connect to WebSocket
+        connectWebSocket();
+    </script>
+</body>
+</html>
